@@ -10,7 +10,7 @@ import (
     "time"
 
 	//syncs 
-	"github.com/bjaral/solemne3_SO/sync" 
+	"solemne3_SO/sync" 
 	// "berkeley/sync" 
 	// "logical/sync"
 )

@@ -1,9 +1,9 @@
 package main
 
 import (
-    "github.com/bjaral/solemne3_SO/config"
-    "github.com/bjaral/solemne3_SO/node"
-    "github.com/bjaral/solemne3_SO/sync"
+    "solemne3_SO/config"
+    "solemne3_SO/node"
+    "solemne3_SO/sync"
     "time"
 )
 
