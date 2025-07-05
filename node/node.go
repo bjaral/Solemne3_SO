@@ -1,40 +1,37 @@
 package node
 
 import (
-    "bufio"
-    "fmt"
-    "net"
-    "os"
-    "strings"
-    "sync"
-    "time"
-
-	//syncs 
-	"solemne3_SO/sync" 
-	// "berkeley/sync" 
-	// "logical/sync"
+	"bufio"
+	"fmt"
+	"net"
+	"os"
+	"strings"
+	"sync"
+	"time"
+	"strconv"
 )
 
 
-// cristian /sync
-if strings.TrimSpace(message) == "TIME_REQUEST" {
-    // Llama a la función del paquete sync
-    sync.HandleTimeRequest(n, message, conn)
-    return
-}
 
-// berkeley /sync
-if strings.TrimSpace(message) == "GET_TIME" ||
-   strings.HasPrefix(message, "ADJUST_TIME:") {
-    sync.HandleBerkeleyMessage(n, message, conn)
-    return
-}
+// // cristian /sync
+// if strings.TrimSpace(message) == "TIME_REQUEST" {
+//     // Llama a la función del paquete sync
+//     sync.HandleTimeRequest(n, message, conn)
+//     return
+// }
 
-// logical /sync
-if strings.HasPrefix(message, "LAMPORT:") {
-    sync.HandleLamportMessage(n, relojLogico, message)
-    return
-}
+// // berkeley /sync
+// if strings.TrimSpace(message) == "GET_TIME" ||
+//    strings.HasPrefix(message, "ADJUST_TIME:") {
+//     sync.HandleBerkeleyMessage(n, message, conn)
+//     return
+// }
+
+// // logical /sync
+// if strings.HasPrefix(message, "LAMPORT:") {
+//     sync.HandleLamportMessage(n, relojLogico, message)
+//     return
+// }
 
 
 
@@ -92,25 +89,35 @@ func (n *Node) handleConnection(conn net.Conn) {
     }
 
     message = strings.TrimSpace(message)
-    n.HandleMessage(message)
+    n.HandleMessage(message,conn)
 }
 
 // HandleMessage interpreta y responde a un mensaje recibido
-func (n *Node) HandleMessage(message string) {
-    fmt.Println("[" + n.Name + "] Mensaje recibido:", message)
+func (n *Node) HandleMessage(message string, conn net.Conn) {
+	fmt.Println("[" + n.Name + "] Mensaje recibido:", message)
 
-    // Ejemplo simple: ajustar reloj si recibe un mensaje tipo SETCLOCK:YYYY-MM-DD HH:MM:SS
-    if strings.HasPrefix(message, "SETCLOCK:") {
-        newTimeStr := strings.TrimPrefix(message, "SETCLOCK:")
-        newTime, err := time.Parse("2006-01-02 15:04:05", newTimeStr)
-        if err == nil {
-            n.Mutex.Lock()
-            n.Clock = newTime
-            n.Mutex.Unlock()
-            fmt.Println("[" + n.Name + "] Reloj ajustado a", newTime)
-        }
-    }
+	if strings.HasPrefix(message, "SETCLOCK:") {
+		newTimeStr := strings.TrimPrefix(message, "SETCLOCK:")
+		newTime, err := time.Parse("2006-01-02 15:04:05", newTimeStr)
+		if err == nil {
+			n.Mutex.Lock()
+			n.Clock = newTime
+			n.Mutex.Unlock()
+			fmt.Println("[" + n.Name + "] Reloj ajustado a", newTime)
+		}
+	}
+
+	if message == "TIME_REQUEST" {
+		n.HandleTimeRequest(conn)
+		return
+	}
+
+	if message == "GET_TIME" || strings.HasPrefix(message, "ADJUST_TIME:") {
+		n.HandleBerkeleyMessage(message, conn)
+		return
+	}
 }
+
 
 // SendMessage envía un mensaje a un nodo remoto
 func (n *Node) SendMessage(toAddress, message string) {
@@ -151,4 +158,35 @@ func (n *Node) SetClock(t time.Time) {
     n.Mutex.Lock()
     n.Clock = t
     n.Mutex.Unlock()
+}
+
+func (n *Node) HandleTimeRequest(conn net.Conn) {
+	currentTime := n.GetClock().Format("2006-01-02 15:04:05")
+	conn.Write([]byte(currentTime + "\n"))
+	fmt.Println("[" + n.Name + "] Hora enviada a cliente:", currentTime)
+}
+
+
+func (n *Node) HandleBerkeleyMessage(message string, conn net.Conn) {
+	msg := strings.TrimSpace(message)
+
+	switch {
+	case msg == "GET_TIME":
+		currentTime := n.GetClock().Format("2006-01-02 15:04:05")
+		conn.Write([]byte(currentTime + "\n"))
+		fmt.Println("[" + n.Name + "] Enviando hora:", currentTime)
+
+	case strings.HasPrefix(msg, "ADJUST_TIME:"):
+		parts := strings.Split(msg, ":")
+		if len(parts) != 2 {
+			return
+		}
+		adjustmentSec, err := strconv.ParseInt(parts[1], 10, 64)
+		if err != nil {
+			return
+		}
+		newTime := n.GetClock().Add(time.Duration(adjustmentSec) * time.Second)
+		n.SetClock(newTime)
+		fmt.Println("[" + n.Name + "] Reloj ajustado a", newTime)
+	}
 }

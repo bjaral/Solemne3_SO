@@ -6,7 +6,7 @@ import (
     "strings"
     "time"
 
-    "github.com/bjaral/solemne3_SO/node"  // Reemplaza con el nombre real de tu módulo
+    "solemne3_SO/node"  // Reemplaza con el nombre real de tu módulo
 )
 
 // CristianSync permite sincronizar el reloj de un cliente con un servidor

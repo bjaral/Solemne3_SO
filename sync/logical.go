@@ -5,7 +5,7 @@ import (
     "strconv"
     "strings"
 
-    "github.com/bjaral/solemne3_SO/node"
+    "solemne3_SO/node"
 )
 
 // RelojLógico almacena el valor entero del reloj Lamport

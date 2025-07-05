@@ -8,7 +8,7 @@ import (
     "strings"
     "time"
 
-    "github.com/bjaral/solemne3_SO/node" // Cambia por tu nombre real de módulo
+    "solemne3_SO/node" // Cambia por tu nombre real de módulo
 )
 
 // BerkeleySync inicia una sincronización desde un nodo coordinador hacia todos los nodos
