@@ -1,3 +1,4 @@
-module solemne3
+module solemne3_SO
+
 
 go 1.24.4
