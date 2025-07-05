@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	// "os"
 	"solemne3_SO/config"
 	"solemne3_SO/node"
 	"solemne3_SO/sync"
@@ -11,9 +10,18 @@ import (
 )
 
 func main() {
-	// Definir flag --port
+	// ----- Port -----
+
+	// Definir flags
 	port := flag.String("port", "", "Puerto en el que se iniciará el nodo")
+
+	// ----- Algorithm -----
+
+	algo := flag.String("algo", "cristian", "Algoritmo de sincronización (cristian|berkeley|logical|vector)")
+
 	flag.Parse()
+
+	// ----- Port -----
 
 	// Si no viene --port, revisar argumentos posicionales
 	if *port == "" {
@@ -28,7 +36,7 @@ func main() {
 	address := "localhost:" + *port
 	nombreNodo := "Nodo_" + *port
 
-	fmt.Printf("[%s] Iniciando en %s...\n", nombreNodo, address)
+	fmt.Printf("[%s] Iniciando en %s usando algoritmo %s\n", nombreNodo, address, *algo)
 
 	// Crear nodo
 	peers := config.NodeAddresses
@@ -44,7 +52,23 @@ func main() {
 	for _, peer := range peers {
 		if peer != address {
 			fmt.Println("[" + nombreNodo + "] Sincronizando con " + peer)
-			sync.CristianSync(myNode, peer)
+
+			// ----- Algorithm -----
+
+			switch *algo {
+			case "cristian":
+				sync.CristianSync(myNode, peer)
+			case "berkeley":
+				sync.BerkeleySync(myNode)
+			case "logical":
+				reloj := sync.NewRelojLogico()
+				sync.EnviarMensajeLogico(myNode, peer, reloj, "Hola desde "+nombreNodo)
+			case "vector":
+				fmt.Println("VectorClock pendiente.")
+			default:
+				fmt.Println("Algoritmo no reconocido: utilizando algoritmo cristian por defecto", *algo)
+				sync.CristianSync(myNode, peer)
+			}
 		}
 	}
 
